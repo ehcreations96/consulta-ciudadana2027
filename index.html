@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnóstico Ciudadano | Xicoténcatl, Tamaulipas</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --card: #ffffff;
+      --primary: #0f4c3a;
+      --primary-hover: #14634c;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+      --ok-bg: #dcfce7;
+      --ok-text: #14532d;
+      --err-bg: #fee2e2;
+      --err-text: #991b1b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 20px 14px 36px;
+    }
+    .shell {
+      max-width: 720px;
+      margin: 0 auto;
+      background: var(--card);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #dbe3ec;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+    .hero {
+      background: linear-gradient(135deg, #0f4c3a 0%, #1b6b52 100%);
+      color: #ffffff;
+      padding: 26px 28px;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.16);
+      color: #f0fdf4;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 5px 11px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+    .hero p {
+      margin: 0;
+      color: #e2f1ec;
+      font-size: 14px;
+    }
+    .form-body {
+      padding: 24px 28px 28px;
+    }
+    @media (max-width: 580px) {
+      .hero, .form-body { padding: 20px 18px; }
+      .hero h1 { font-size: 21px; }
+    }
+    .block {
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .block:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+    .block-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .block-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0;
+    }
+    .block-hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 580px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+    .opt-tag {
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    select, input[type="text"], input[type="tel"], textarea {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #ffffff;
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 76, 58, 0.12);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 76px;
+    }
+    .prio-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .prio-card:last-child { margin-bottom: 0; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .submit-btn {
+      margin-top: 24px;
+      width: 100%;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .submit-btn:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+    .submit-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    .alert {
+      margin-top: 14px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+    }
+    .alert.ok {
+      display: block;
+      background: var(--ok-bg);
+      color: var(--ok-text);
+      border: 1px solid #86efac;
+    }
+    .alert.err {
+      display: block;
+      background: var(--err-bg);
+      color: var(--err-text);
+      border: 1px solid #fca5a5;
+    }
+    .footer {
+      padding: 14px 28px 20px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="hero">
+      <div class="hero-tag">Xicoténcatl, Tamaulipas • Escucha Ciudadana</div>
+      <h1>Censo de Necesidades Prioritarias</h1>
+      <p>
+        Queremos conocer qué es lo más urgente en tu colonia o ejido. Selecciona tus
+        <strong>3 prioridades principales</strong> para ayudar a construir propuestas claras y reales.
+      </p>
+    </div>
+
+    <div class="form-body">
+      <form id="censoForm">
+        <div class="block">
+          <div class="block-head">
+            <h2 class="block-title">1. Datos de ubicación y perfil</h2>
+            <span class="block-hint">Campos obligatorios *</span>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label for="tipo_localidad">Tipo de localidad *</label>
+              <select id="tipo_localidad" required>
+                <option value="">Selecciona una opción...</option>
+                <option value="Cabecera - Centro / Colonias">Cabecera (Centro / Colonias)</option>
+                <option value="Ejido / Comunidad Rural">Ejido / Comunidad Rural</option>
+              </select>
+            </div>
+            <div>
+              <label for="localidad_nombre">Colonia o ejido *</label>
+              <input id="localidad_nombre" type="text" placeholder="Ej. Centro, Barrio Alto, Ej. Emiliano Zapata..." required />
+            </div>
+            <div>
+              <label for="rango_edad">Rango de edad *</label>
+              <select id="rango_edad" required>
+                <option value="">Selecciona...</option>
+                <option value="18-29">18 a 29 años</option>
+                <option value="30-44">30 a 44 años</option>
+                <option value="45-59">45 a 59 años</option>
+                <option value="60+">60 años o más</option>
+              </select>
+            </div>
+            <div>
+              <label for="genero">Género *</label>
+              <select id="genero" required>
+                <option value="">Selecciona...</option>
+                <option value="Mujer">Mujer</option>
+                <option value="Hombre">Hombre</option>
+                <option value="Prefiero no decir">Prefiero no decir</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="block-head">
+            <h2 class="block-title">2. Tus 3 prioridades más urgentes</h2>
+            <span class="block-hint">Elige 3 opciones distintas en orden</span>
+          </div>
+          <div class="prio-card">
+            <label for="prioridad_1">1.ª Prioridad (la más urgente) *</label>
+            <select id="prioridad_1" class="prio-select" required></select>
+          </div>
+          <div class="prio-card">
+            <label for="prioridad_2">2.ª Prioridad *</label>
+            <select id="prioridad_2" class="prio-select" required></select>
+          </div>
+          <div class="prio-card">
+            <label for="prioridad_3">3.ª Prioridad *</label>
+            <select id="prioridad_3" class="prio-select" required></select>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="block-head">
+            <h2 class="block-title">3. Detalle y contacto</h2>
+            <span class="block-hint">Opcionales</span>
+          </div>
+          <div>
+            <label for="comentario">
+              ¿Qué problema puntual urgen atender en tu calle, colonia o ejido?
+              <span class="opt-tag">(opcional)</span>
+            </label>
+            <textarea id="comentario" maxlength="250" placeholder="Cuéntanos brevemente qué situación se vive en tu zona..."></textarea>
+            <div class="meta-row">
+              <span>Ayuda a ubicar acciones puntuales</span>
+              <span id="charCount">0 / 250</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <label for="telefono">
+              Teléfono de contacto / WhatsApp
+              <span class="opt-tag">(opcional — para seguimiento o avisos comunitarios)</span>
+            </label>
+            <input
+              id="telefono"
+              type="tel"
+              maxlength="20"
+              placeholder="Ej. 832 123 4567"
+            />
+          </div>
+        </div>
+
+        <button type="submit" id="btnEnviar" class="submit-btn">Enviar participación</button>
+        <div id="statusMsg" class="alert"></div>
+      </form>
+    </div>
+
+    <div class="footer">
+      Diagnóstico ciudadano para el municipio de Xicoténcatl, Tamaulipas.
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://jookcugfwbelcannxhfn.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_M4JHlrTeke5qd8ogDayWtQ_NynsXKz1";
+
+    const temas = [
+      "Agua potable y drenaje",
+      "Alumbrado público",
+      "Pavimentación, calles y bacheo",
+      "Caminos rurales y sacacosechas",
+      "Seguridad pública y vigilancia",
+      "Salud, clínicas y medicamentos",
+      "Empleo, comercio y apoyo al campo / caña",
+      "Recolección de basura y limpieza",
+      "Espacios públicos, deporte y juventud",
+      "Transporte público y movilidad"
+    ];
+
+    const selects = document.querySelectorAll(".prio-select");
+    selects.forEach((sel, idx) => {
+      sel.innerHTML = `<option value="">Selecciona la ${idx + 1}.ª prioridad...</option>` +
+        temas.map(t => `<option value="${t}">${t}</option>`).join("");
+    });
+
+    const comentarioEl = document.getElementById("comentario");
+    const charCountEl = document.getElementById("charCount");
+    comentarioEl.addEventListener("input", () => {
+      charCountEl.textContent = `${comentarioEl.value.length} / 250`;
+    });
+
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const form = document.getElementById("censoForm");
+    const btn = document.getElementById("btnEnviar");
+    const msg = document.getElementById("statusMsg");
+
+    function showMessage(text, isOk) {
+      msg.textContent = text;
+      msg.className = "alert " + (isOk ? "ok" : "err");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const p1 = document.getElementById("prioridad_1").value;
+      const p2 = document.getElementById("prioridad_2").value;
+      const p3 = document.getElementById("prioridad_3").value;
+
+      if (new Set([p1, p2, p3]).size < 3) {
+        showMessage("Por favor elige 3 prioridades diferentes para la 1.ª, 2.ª y 3.ª posición.", false);
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Guardando respuesta...";
+
+      const telLimpio = document.getElementById("telefono").value.trim();
+
+      const payload = {
+        tipo_localidad: document.getElementById("tipo_localidad").value,
+        localidad_nombre: document.getElementById("localidad_nombre").value.trim(),
+        rango_edad: document.getElementById("rango_edad").value,
+        genero: document.getElementById("genero").value,
+        prioridad_1: p1,
+        prioridad_2: p2,
+        prioridad_3: p3,
+        comentario: comentarioEl.value.trim() || null,
+        telefono: telLimpio || null
+      };
+
+      const { error } = await db.from("encuestas_xico").insert([payload]);
+
+      btn.disabled = false;
+      btn.textContent = "Enviar participación";
+
+      if (error) {
+        showMessage("No se pudo guardar la respuesta. Verifica la URL del proyecto o la tabla en Supabase.", false);
+        console.error(error);
+      } else {
+        showMessage("¡Gracias por participar! Tu respuesta quedó registrada correctamente.", true);
+        form.reset();
+        charCountEl.textContent = "0 / 250";
+      }
+    });
+  </script>
+</body>
+</html>
